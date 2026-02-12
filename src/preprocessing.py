@@ -1,12 +1,7 @@
 import json
 from datasets import load_dataset, DatasetDict
 from transformers import AutoTokenizer
-from trl import DataCollatorForCompletionOnlyLM
-from torch.utils.data import DataLoader
-
-
-DATASET_NAME = "mrmoor/cyber-threat-intelligence"
-MODEL_NAME = "mistralai/Mistral-7B-v0.3"
+from config import DATASET_NAME, MODEL_NAME, PREPROCESSED_DATA_PATH
 
 
 def split_dataset(loaded_dataset):
@@ -47,19 +42,9 @@ def tokenize_datasets(raw_datasets, model_name):
 
     tokenized_datasets = raw_datasets.map(tokenize_function, batched=True)
     tokenized_datasets = tokenized_datasets.remove_columns(raw_datasets["train"].column_names)
-    tokenized_datasets = tokenized_datasets.set_format("torch")
+    tokenized_datasets.set_format("torch")
 
-    # Ensure the model only learns to generate the JSON. During training:
-    # - Before the template, it replaces every tokenID of Instruction and Input with -100 
-    #   --> Model weights are not updated
-    # - After the template, the model uses the actual tokenIDs
-    #   --> Model is trained only on predicting the JSON response
-    data_collator = DataCollatorForCompletionOnlyLM(
-        response_template="### Response:",
-        tokenizer=tokenizer
-    )
-
-    return tokenized_datasets, data_collator
+    return tokenized_datasets
 
 
 if __name__ == '__main__':
@@ -70,24 +55,10 @@ if __name__ == '__main__':
     raw_datasets = split_dataset(ds)
 
     # Tokenize datasets
-    tokenized_datasets, data_collator = tokenize_datasets(raw_datasets, MODEL_NAME)
+    tokenized_datasets = tokenize_datasets(raw_datasets, MODEL_NAME)
 
-    # Build PyTorch Dataloaders
-    train_loader = DataLoader(
-        tokenized_datasets["train"],
-        batch_size=16,
-        shuffle=True,
-        collate_fn=data_collator
-    )
-    val_loader = DataLoader(
-        tokenized_datasets["validation"],
-        batch_size=16,
-        shuffle=False,
-        collate_fn=data_collator
-    )
-    test_loader = DataLoader(
-        tokenized_datasets["test"],
-        batch_size=16,
-        shuffle=False,
-        collate_fn=data_collator
-    )
+    # Save to disk
+    tokenized_datasets.save_to_disk(PREPROCESSED_DATA_PATH)
+    print("Preprocessed and tokenized dataset saved to " + PREPROCESSED_DATA_PATH)
+
+    

@@ -1,7 +1,7 @@
 import torch
 from transformers import DataCollatorForLanguageModeling
 
-class CTICompletionColator(DataCollatorForLanguageModeling):
+class CTICompletionCollator(DataCollatorForLanguageModeling):
     def __init__(self, response_template, tokenizer, *args, **kwargs):
         super().__init__(tokenizer=tokenizer, mlm=False, *args, **kwargs)
         self.response_template = response_template

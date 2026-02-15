@@ -12,7 +12,7 @@ from torch.optim import AdamW
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from tqdm.auto import tqdm
 from config import MODEL_NAME, PREPROCESSED_DATA_PATH
-from collators import CTICompletionColator
+from collators import CTICompletionCollator
 from dotenv import load_dotenv
 from huggingface_hub import login
 from evaluation import get_loss, generate_sample
@@ -40,7 +40,7 @@ def train(device):
     tokenizer.pad_token = tokenizer.eos_token
 
     # Data collator: Ensure the model only learns to generate the JSON
-    data_collator = CTICompletionColator(
+    data_collator = CTICompletionCollator(
         response_template="### Response:",
         tokenizer=tokenizer
     )

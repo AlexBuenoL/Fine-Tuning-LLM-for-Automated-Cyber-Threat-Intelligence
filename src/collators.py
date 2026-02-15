@@ -14,7 +14,7 @@ class CTICompletionColator(DataCollatorForLanguageModeling):
         response_token_ids = self.tokenizer.encode(self.response_template, add_special_tokens=False)
 
         for i in range(len(batch["labels"])):
-            input_ids = batch["input_ids"][i].to_list()
+            input_ids = batch["input_ids"][i].tolist()
 
             # Find the slice where the actual answer starts
             response_start_idx = -1

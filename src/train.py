@@ -15,6 +15,7 @@ from config import MODEL_NAME, PREPROCESSED_DATA_PATH
 from collators import CTICompletionColator
 from dotenv import load_dotenv
 from huggingface_hub import login
+from evaluation import get_loss, generate_sample
 
 
 # Hyperparameters definition
@@ -23,24 +24,11 @@ LR = 2e-4
 BATCH_SIZE = 2
 GRADIENT_ACCUMULATION_STEPS = 8
 EVAL_STEPS = 50
+SAMPLE_STEPS = 200
 
 LORA_RANK = 8
 LORA_ALPHA = 32
 LORA_DROPOUT = 0.05
-
-
-def evaluate(model, val_loader, device):
-    model.eval()
-    total_loss = 0.0
-    
-    with torch.no_grad():
-        for batch in val_loader:
-            batch = {k: v.to(device) for k, v in batch.items()}
-            output = model(**batch)
-            total_loss += output.loss.item()
-    
-    model.train()
-    return total_loss / len(val_loader)
 
 
 def train(device):
@@ -140,15 +128,19 @@ def train(device):
                 progress_bar.update(1)
 
                 if global_step % EVAL_STEPS == 0:
-                    val_loss = evaluate(model, val_loader, device)
+                    val_loss = get_loss(model, val_loader, device)
                     print(f"[Step: {global_step}]: Train Loss: {loss.item():.2f} || Val Loss: {val_loss:.2f}")
 
                     if val_loss < best_val_loss:
                         best_val_loss = val_loss
                         model.save_pretrained("./models/best_cti_finetuned")
                         print("New best model saved.")
+                
+                # Every 200 steps, generate JSON in a validation sample
+                if global_step % SAMPLE_STEPS == 0:
+                    generate_sample(model, val_loader, tokenizer, device)
+
                     
-            
 if __name__ == '__main__':
     # HG logging
     load_dotenv()

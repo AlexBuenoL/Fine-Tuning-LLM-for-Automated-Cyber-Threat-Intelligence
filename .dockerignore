@@ -1,0 +1,12 @@
+# Entornos virtuales
+venv/
+.env
+
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Datos y Modelos (Los montaremos como volúmenes)
+data/
+src/models/

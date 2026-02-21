@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  cti-agent:
+    build: .
+    container_name: cti_mistral_container
+    env_file: 
+     - ./src/.env
+    volumes:
+     - ./data/:/app/data
+     - ./src/models/:/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    tty: true
+    stdin_open: true

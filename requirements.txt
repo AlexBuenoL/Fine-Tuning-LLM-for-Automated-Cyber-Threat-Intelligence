@@ -148,3 +148,4 @@ sentencepiece
 protobuf 
 tiktoken
 bitsandbytes==0.46.1
+dotenv
